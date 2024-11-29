@@ -181,7 +181,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 0,vertical: 60),
+              padding: const EdgeInsets.symmetric(horizontal: 0,vertical: 45),
               child: Stack(
                 alignment: AlignmentDirectional.center,
                 children: [
@@ -288,7 +288,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                               ],
                             ),
                           ),
-                          Spacer(),
+                          SizedBox(width: 50,),
                           Container(
                             decoration: BoxDecoration(
                               color: Color(0xFF111113),
@@ -322,10 +322,10 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                   ),
                 ), // 调整间隔
                 Center(
-                  child: ElevatedButton(
+                  child: TextButton(
                     onPressed: isScrolling ? (isAuto ? null : selectManualNumber)
                         : generateRandomNumber,
-                    style: ElevatedButton.styleFrom(
+                    style: TextButton.styleFrom(
                       splashFactory:NoSplash.splashFactory,
                       padding:
                       EdgeInsets.symmetric(horizontal: 40, vertical: 10),
@@ -388,7 +388,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
           decoration: BoxDecoration(
             color: isSelected ? Color(0xFF767678) : Colors.transparent,
             border: Border.all(color: Color(0xFFAAAAAA)),
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.circular(2),
           ),
           child: Text(label, style: TextStyle(color: Color(0xFFAAAAAA))),
         ),
