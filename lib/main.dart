@@ -71,7 +71,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
       });
 
       // 滚动随机数
-      _timer = Timer.periodic(Duration(milliseconds: 50), (timer) {
+      _timer = Timer.periodic(Duration(milliseconds: 20), (timer) {
         setState(() {
           randomNumber = start + random.nextInt(end - start + 1);
         });
@@ -103,7 +103,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
     } else {
 
       // 滚动随机数
-      _timer = Timer.periodic(Duration(milliseconds: 50), (timer) {
+      _timer = Timer.periodic(Duration(milliseconds: 20), (timer) {
         setState(() {
           randomNumber = start + random.nextInt(end - start + 1);
         });
@@ -213,12 +213,12 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(top: 80,left: 10),
+                padding: const EdgeInsets.only(top: 85,left: 10),
                 child: Text(
                   "$randomNumber",
                   style: const TextStyle(
                       color: Color(0xFFAAAAAA),
-                      fontSize: 170,
+                      fontSize: 175,
                       fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
@@ -333,7 +333,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                       disabledBackgroundColor: Color(0xFF191919),
                       minimumSize: Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
+                        borderRadius: BorderRadius.circular(3),
                       ),// 设置最小宽度为无穷大，高度可根据需要调整
                     ),
                     child: Text(isScrolling ? (isAuto ? "选中" : "选中") : "开始"
