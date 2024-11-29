@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+
 void main() {
   runApp(RandomNumberApp());
 }
@@ -101,7 +102,6 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
         randomNumber = selectedNumbers.last; // 显示最终选中的数字
       });
     } else {
-
       // 滚动随机数
       _timer = Timer.periodic(Duration(milliseconds: 20), (timer) {
         setState(() {
@@ -118,12 +118,12 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
       setState(() {
         randomNumber = start + random.nextInt(end - start + 1);
       });
-
     }
   }
 
   void selectManualNumber() {
-    if (!isScrolling || selectedNumbers.length >= int.parse(countController.text)) return;
+    if (!isScrolling ||
+        selectedNumbers.length >= int.parse(countController.text)) return;
 
     final int start = int.parse(startController.text);
     final int end = int.parse(endController.text);
@@ -143,15 +143,11 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
     });
   }
 
-
   @override
   void dispose() {
     _timer?.cancel(); // 确保释放资源
     super.dispose();
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +177,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 0,vertical: 45),
+              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 45),
               child: Stack(
                 alignment: AlignmentDirectional.center,
                 children: [
@@ -207,13 +203,11 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                     ),
                   ),
                 ],
-              )
-
-              ,
+              ),
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(top: 85,left: 10),
+                padding: const EdgeInsets.only(top: 85, left: 10),
                 child: Text(
                   "$randomNumber",
                   style: const TextStyle(
@@ -227,32 +221,32 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-               // Spacer(),
+                // Spacer(),
                 Container(
                   padding: const EdgeInsets.only(left: 5),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if(selectedNumbers.isNotEmpty)
-                      Text(
-                        "已选:",
-                        style: TextStyle(color: Color(0xFFAAAAAA)),
-                      ),
+                      if (selectedNumbers.isNotEmpty)
+                        Text(
+                          "已选:",
+                          style: TextStyle(color: Color(0xFFAAAAAA)),
+                        ),
                       Text(
                         selectedNumbers.isNotEmpty
                             ? selectedNumbers.join('、')
-                            : "",  // 为空时不显示文本
+                            : "", // 为空时不显示文本
                         style: TextStyle(color: Color(0xFFAAAAAA)),
                       ),
                       SizedBox(height: 15), // 调整间隔
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          inputField("起始:", startController,isScrolling),
+                          inputField("起始:", startController, isScrolling),
                           SizedBox(width: 20),
-                          inputField("结束:", endController,isScrolling),
+                          inputField("结束:", endController, isScrolling),
                           SizedBox(width: 20),
-                          inputField("数量:", countController,isScrolling),
+                          inputField("数量:", countController, isScrolling),
                         ],
                       ),
                       SizedBox(height: 10), // 调整间隔
@@ -268,18 +262,16 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
                                 toggleButton("不重复", !allowDuplicates, () {
-                                  if(isScrolling){
-                                    return ;
+                                  if (isScrolling) {
+                                    return;
                                   }
                                   setState(() {
                                     allowDuplicates = false;
                                   });
-
-
                                 }),
                                 toggleButton("可重复", allowDuplicates, () {
-                                  if(isScrolling){
-                                    return ;
+                                  if (isScrolling) {
+                                    return;
                                   }
                                   setState(() {
                                     allowDuplicates = true;
@@ -288,7 +280,9 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                               ],
                             ),
                           ),
-                          SizedBox(width: 50,),
+                          SizedBox(
+                            width: 50,
+                          ),
                           Container(
                             decoration: BoxDecoration(
                               color: Color(0xFF111113),
@@ -297,16 +291,16 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                             child: Row(
                               children: [
                                 toggleButton("手动  ", !isAuto, () {
-                                  if(isScrolling){
-                                    return ;
+                                  if (isScrolling) {
+                                    return;
                                   }
                                   setState(() {
                                     isAuto = false;
                                   });
                                 }),
                                 toggleButton("自动  ", isAuto, () {
-                                  if(isScrolling){
-                                    return ;
+                                  if (isScrolling) {
+                                    return;
                                   }
                                   setState(() {
                                     isAuto = true;
@@ -323,23 +317,40 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                 ), // 调整间隔
                 Center(
                   child: TextButton(
-                    onPressed: isScrolling ? (isAuto ? null : selectManualNumber)
+                    onPressed: isScrolling
+                        ? (isAuto ? null : selectManualNumber)
                         : generateRandomNumber,
                     style: TextButton.styleFrom(
-                      splashFactory:NoSplash.splashFactory,
-                      padding:
-                      EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                      splashFactory: NoSplash.splashFactory,
+                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
                       backgroundColor: Color(0xFF393939),
                       disabledBackgroundColor: Color(0xFF191919),
                       minimumSize: Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(3),
-                      ),// 设置最小宽度为无穷大，高度可根据需要调整
+                      ),
+                    ).copyWith(
+                      overlayColor: MaterialStateProperty.resolveWith((states) {
+                        if (states.contains(MaterialState.pressed)) {
+                          return Color(0xFF393939); // 按下时的背景颜色
+                        }
+                        return null;
+                      }),
+                      foregroundColor: MaterialStateProperty.resolveWith((states) {
+                        if (states.contains(MaterialState.pressed)) {
+                          return Colors.white24; // 按下时文字颜色
+                        }
+                        return Color(0xFFAAAAAA); // 默认文字颜色
+                      }),
                     ),
-                    child: Text(isScrolling ? (isAuto ? "选中" : "选中") : "开始"
-                      ,style: TextStyle(color: Color(0xFFAAAAAA),fontSize: 19,),),
+                    child: Text(
+                      isScrolling ? (isAuto ? "选中" : "选中") : "开始",
+                      style: TextStyle(fontSize: 19), // 文字大小设置
+                    ),
                   ),
                 ),
+
+
                 SizedBox(height: 20), // 调整间隔
               ],
             )
@@ -349,7 +360,8 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
     );
   }
 
-  Widget inputField(String label, TextEditingController controller,bool isScrolling) {
+  Widget inputField(
+      String label, TextEditingController controller, bool isScrolling) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -372,7 +384,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
               contentPadding: EdgeInsets.symmetric(horizontal: 5),
             ),
             keyboardType: TextInputType.number,
-            enabled:!isScrolling,
+            enabled: !isScrolling,
           ),
         ),
       ],
@@ -384,7 +396,10 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
       return GestureDetector(
         onTap: onPressed,
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 21, vertical: 5,),
+          padding: EdgeInsets.symmetric(
+            horizontal: 21,
+            vertical: 5,
+          ),
           decoration: BoxDecoration(
             color: isSelected ? Color(0xFF767678) : Colors.transparent,
             border: Border.all(color: Color(0xFFAAAAAA)),
@@ -405,7 +420,6 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
   }
 }
 
-
 class HexagonWithCirclePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -415,7 +429,7 @@ class HexagonWithCirclePainter extends CustomPainter {
       ..strokeWidth = 1.3;
 
     Paint circlePaint = Paint()
-      ..color =Color(0xFFAAAAAA)
+      ..color = Color(0xFFAAAAAA)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.3;
 
