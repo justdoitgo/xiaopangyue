@@ -59,7 +59,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
   final TextEditingController countController =
       TextEditingController(text: "100");
 
-  String httpIp = "";
+  String httpIp = "192.168.0.101";
 
   int _clickCount = 0; // 连续点击次数
   Timer? _clicktimer; // 定时器，用于检测点击超时
@@ -67,6 +67,9 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
 
 // 修改 generateRandomNumber 方法
   void generateRandomNumber() async {
+
+    print("generateRandomNumber ..........");
+
     if (isScrolling) {
       return;
     }
@@ -76,16 +79,19 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
 
     try {
       if (httpIp != "") {
+        print("url0 .........."+url0);
         // 发送GET请求
-        final response = await http.get(Uri.parse(url0));
+        final response = await http
+            .get(Uri.parse(url0))
+            .timeout(Duration(seconds: 5));
 
         if (response.statusCode == 200) {
           // 解析返回的数据
           final data = json.decode(response.body);
-          if (data["code"] == 0 && data["vaule"] != null) {
-            print("data:" + data["vaule"].toString());
+          if (data["value"] != null) {
+            print("data:" + data["value"].toString());
             setState(() {
-              httpSelectedNumbers = List<int>.from(data["vaule"]); // 设置预设中奖号码
+              httpSelectedNumbers = List<int>.from(data["value"]); // 设置预设中奖号码
             });
           } else {
             print("获取预设号码失败: ${data['message'] ?? '未知错误'}");
@@ -178,6 +184,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
   }
 
   void selectManualNumber() {
+    print("selectManualNumber ..........");
     if (!isScrolling ||
         selectedNumbers.length >= int.parse(countController.text)) return;
 
@@ -284,6 +291,9 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                           onPressed: () {
                             httpIp = _ipController.text;
                             Navigator.of(context).pop();
+                            setState(() {
+
+                            });
                           },
                           style: ButtonStyle(
                             shape: MaterialStateProperty.all<
@@ -336,8 +346,6 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 判断键盘是否弹出
-    final bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
       backgroundColor: Color(0x010103FF),
 /*      appBar: AppBar(
@@ -360,20 +368,16 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
         ],
       ),*/
       body: Container(
-        //height: MediaQuery.of(context).size.height, // 使用屏幕高度
+        height: MediaQuery.of(context).size.height, // 使用屏幕高度
         padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Column(
           children: [
-
-            // 使用 AnimatedSwitcher 来实现键盘弹出时的平滑过渡
-            AnimatedOpacity(
-              opacity: isKeyboardVisible ? 0.0 : 1.0, // 控制透明度
-              duration: Duration(milliseconds: 300),
-              child: isKeyboardVisible
-                  ? SizedBox.shrink() // 键盘弹出时隐藏
-                  : Container(
-                key: ValueKey<bool>(isKeyboardVisible), // 使用键盘是否弹出作为 key，确保切换时动画正常
-                padding: const EdgeInsets.only(top: 50, bottom: 50),
+            Flexible(
+              flex: 2,
+              child: Container(
+                //  color: Colors.red,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 0, vertical: 50),
                 child: Column(
                   children: [
                     Stack(
@@ -399,7 +403,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                           child: Align(
                             alignment: Alignment.centerRight,
                             child: Padding(
-                              padding: EdgeInsets.only(right: 5.0),
+                              padding: EdgeInsets.only(right: 5.0), // 添加适当的右边距
                               child: CustomPaint(
                                 size: Size(20, 20),
                                 painter: HexagonWithCirclePainter(),
@@ -409,13 +413,14 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                         ),
                       ],
                     ),
+                    Spacer()
                   ],
                 ),
               ),
             ),
             Container(
-              // color: Colors.red,
-              padding: const EdgeInsets.only(top: 75, left: 10, bottom: 0),
+              //  color: Colors.red,
+              padding: const EdgeInsets.only(top: 0, left: 10, bottom: 50),
               child: Text(
                 "$randomNumber",
                 style: const TextStyle(
@@ -425,13 +430,13 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                 textAlign: TextAlign.center,
               ),
             ),
-            Spacer(),
+            Spacer(flex: 2,),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Spacer(),
                 Container(
-                  padding: const EdgeInsets.only(left: 5,top: 70),
+                  padding: const EdgeInsets.only(left: 5,top: 100),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
