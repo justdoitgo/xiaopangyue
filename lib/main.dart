@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; // 用于解析JSON数据
@@ -58,12 +59,11 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
   final TextEditingController countController =
       TextEditingController(text: "100");
 
-  String httpIp = "192.168.252.7";
+  String httpIp = "";
 
   int _clickCount = 0; // 连续点击次数
   Timer? _clicktimer; // 定时器，用于检测点击超时
   final int _timeLimit = 1000; // 点击的时间间隔限制（秒）
-
 
 // 修改 generateRandomNumber 方法
   void generateRandomNumber() async {
@@ -72,34 +72,37 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
     }
     final int count = int.parse(countController.text);
 
-    var url0="http://"+httpIp+":8080/getCount?count="+count.toString();
+    var url0 = "http://" + httpIp + ":8080/getCount?count=" + count.toString();
 
     try {
-      // 发送GET请求
-      final response = await http.get(Uri.parse(url0));
+      if (httpIp != "") {
+        // 发送GET请求
+        final response = await http.get(Uri.parse(url0));
 
-      if (response.statusCode == 200) {
-        // 解析返回的数据
-        final data = json.decode(response.body);
-        if (data["code"] == 0 && data["vaule"] != null) {
-          print("data:"+data["vaule"].toString());
-          setState(() {
-            httpSelectedNumbers = List<int>.from(data["vaule"]); // 设置预设中奖号码
-          });
+        if (response.statusCode == 200) {
+          // 解析返回的数据
+          final data = json.decode(response.body);
+          if (data["code"] == 0 && data["vaule"] != null) {
+            print("data:" + data["vaule"].toString());
+            setState(() {
+              httpSelectedNumbers = List<int>.from(data["vaule"]); // 设置预设中奖号码
+            });
+          } else {
+            print("获取预设号码失败: ${data['message'] ?? '未知错误'}");
+            httpSelectedNumbers.clear();
+          }
         } else {
-          print("获取预设号码失败: ${data['message'] ?? '未知错误'}");
+          print(e);
           httpSelectedNumbers.clear();
         }
-      } else {
-        print(e);
-        httpSelectedNumbers.clear();
       }
     } catch (e) {
-        print(e);
-        httpSelectedNumbers.clear();
+      print(e);
+      httpSelectedNumbers.clear();
     }
-    
-    print("httpSelectedNumbers.length:"+httpSelectedNumbers.length.toString());
+
+    print(
+        "httpSelectedNumbers.length:" + httpSelectedNumbers.length.toString());
 
     final int start = int.parse(startController.text);
     final int end = int.parse(endController.text);
@@ -120,12 +123,12 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
 
       // 延迟选择结果
       for (int i = 0; i < count; i++) {
-        await Future.delayed(Duration(seconds: 1 + random.nextInt(2))); // 延迟1-3秒
+        await Future.delayed(
+            Duration(seconds: 1 + random.nextInt(2))); // 延迟1-3秒
         setState(() {
-
-          if(httpSelectedNumbers.length>0){
+          if (httpSelectedNumbers.length > 0) {
             selectedNumbers.add(httpSelectedNumbers[i]);
-          }else{
+          } else {
             if (allowDuplicates) {
               selectedNumbers.add(randomNumber);
             } else {
@@ -183,23 +186,17 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
 
     setState(() {
       if (allowDuplicates || !selectedNumbers.contains(randomNumber)) {
-
-
-
-        if(httpSelectedNumbers.length>0){
+        if (httpSelectedNumbers.length > 0) {
           selectedNumbers.add(httpSelectedNumbers[selectedNumbers.length]);
-        }else{
+        } else {
           selectedNumbers.add(randomNumber);
         }
-
       }
 
       if (selectedNumbers.length < int.parse(countController.text)) {
-
-
-        if(httpSelectedNumbers.length>0){
+        if (httpSelectedNumbers.length > 0) {
           randomNumber = selectedNumbers.last;
-        }else{
+        } else {
           randomNumber = start + Random().nextInt(end - start + 1);
         }
       } else {
@@ -213,7 +210,8 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
 
   // 弹出框显示函数
   void _showDialog(BuildContext context) {
-    final TextEditingController _ipController = TextEditingController(text: httpIp);
+    final TextEditingController _ipController =
+        TextEditingController(text: httpIp);
     showDialog(
       context: context,
       builder: (context) {
@@ -222,9 +220,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
             clipBehavior: Clip.none, // 使按钮能够超出Stack范围
             children: [
               Center(
-                child: Text(
-                  "输入ip地址"
-                ),
+                child: Text("输入ip地址"),
               ),
             ],
           ),
@@ -235,7 +231,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
               TextField(
                 controller: _ipController,
                 decoration: InputDecoration(
-                  labelText: '用户名',
+                  labelText: 'iP',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -283,11 +279,10 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                       child: ElevatedButton(
                           child: Text(
                             '确定',
-                            style: TextStyle(
-                                color: Colors.blueAccent),
+                            style: TextStyle(color: Colors.blueAccent),
                           ),
                           onPressed: () {
-                            httpIp=_ipController.text;
+                            httpIp = _ipController.text;
                             Navigator.of(context).pop();
                           },
                           style: ButtonStyle(
@@ -321,7 +316,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
     super.dispose();
   }
 
-  bool isShowIP(){
+  bool isShowIP() {
     // 每次点击时重置定时器
     _clicktimer?.cancel();
     _clicktimer = Timer(Duration(milliseconds: _timeLimit), () {
@@ -363,64 +358,75 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
         ],
       ),*/
       body: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        height: MediaQuery.of(context).size.height, // 使用屏幕高度
+        padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 45),
-              child: Stack(
-                alignment: AlignmentDirectional.center,
-                children: [
-                  Center(
-                    child: Text(
-                      "随机数生成",
-                      style: TextStyle(
-                        color: Color(0xFF464647),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      if (isShowIP()) {
-                        _showDialog(context);
-                      }
-                    },
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: EdgeInsets.only(right: 5.0), // 添加适当的右边距
-                        child: CustomPaint(
-                          size: Size(20, 20),
-                          painter: HexagonWithCirclePainter(),
+            Flexible(
+              flex: 2,
+              child: Container(
+                //  color: Colors.red,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 0, vertical: 50),
+                child: Column(
+                  children: [
+                    Stack(
+                      alignment: AlignmentDirectional.center,
+                      children: [
+                        Center(
+                          child: Text(
+                            "随机数生成",
+                            style: TextStyle(
+                              color: Color(0xFF464647),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
-                      ),
+                        GestureDetector(
+                          onTap: () {
+                            if (isShowIP()) {
+                              _showDialog(context);
+                            }
+                          },
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Padding(
+                              padding: EdgeInsets.only(right: 5.0), // 添加适当的右边距
+                              child: CustomPaint(
+                                size: Size(20, 20),
+                                painter: HexagonWithCirclePainter(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 85, left: 10),
-                child: Text(
-                  "$randomNumber",
-                  style: const TextStyle(
-                      color: Color(0xFFAAAAAA),
-                      fontSize: 175,
-                      fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
+                    Spacer()
+                  ],
                 ),
               ),
             ),
+            Container(
+              //  color: Colors.red,
+              padding: const EdgeInsets.only(top: 0, left: 10, bottom: 50),
+              child: Text(
+                "$randomNumber",
+                style: const TextStyle(
+                    color: Color(0xFFAAAAAA),
+                    fontSize: 175,
+                    fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Spacer(flex: 2,),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Spacer(),
                 Container(
-                  padding: const EdgeInsets.only(left: 5),
+                  padding: const EdgeInsets.only(left: 5,top: 120),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -446,63 +452,74 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                           inputField("数量:", countController, isScrolling),
                         ],
                       ),
-                      SizedBox(height: 10), // 调整间隔
+                      SizedBox(height: 12), // 调整间隔
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Color(0xFF111113),
-                              borderRadius: BorderRadius.circular(5),
-                            ),
+                          Expanded(
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                toggleButton("不重复", !allowDuplicates, () {
-                                  if (isScrolling) {
-                                    return;
-                                  }
-                                  setState(() {
-                                    allowDuplicates = false;
-                                  });
-                                }),
-                                toggleButton("可重复", allowDuplicates, () {
-                                  if (isScrolling) {
-                                    return;
-                                  }
-                                  setState(() {
-                                    allowDuplicates = true;
-                                  });
-                                }),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF111113),
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      toggleButton("不重复", !allowDuplicates, () {
+                                        if (isScrolling) {
+                                          return;
+                                        }
+                                        setState(() {
+                                          allowDuplicates = false;
+                                        });
+                                      }),
+                                      toggleButton("可重复", allowDuplicates, () {
+                                        if (isScrolling) {
+                                          return;
+                                        }
+                                        setState(() {
+                                          allowDuplicates = true;
+                                        });
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                                Spacer(),
                               ],
                             ),
                           ),
-                          SizedBox(
-                            width: 50,
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Color(0xFF111113),
-                              borderRadius: BorderRadius.circular(5),
-                            ),
+                          Expanded(
                             child: Row(
                               children: [
-                                toggleButton("手动  ", !isAuto, () {
-                                  if (isScrolling) {
-                                    return;
-                                  }
-                                  setState(() {
-                                    isAuto = false;
-                                  });
-                                }),
-                                toggleButton("自动  ", isAuto, () {
-                                  if (isScrolling) {
-                                    return;
-                                  }
-                                  setState(() {
-                                    isAuto = true;
-                                  });
-                                }),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF111113),
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      toggleButton("手动  ", !isAuto, () {
+                                        if (isScrolling) {
+                                          return;
+                                        }
+                                        setState(() {
+                                          isAuto = false;
+                                        });
+                                      }),
+                                      toggleButton("自动  ", isAuto, () {
+                                        if (isScrolling) {
+                                          return;
+                                        }
+                                        setState(() {
+                                          isAuto = true;
+                                        });
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                                Spacer(),
                               ],
                             ),
                           ),
@@ -519,7 +536,8 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                         : generateRandomNumber,
                     style: TextButton.styleFrom(
                       splashFactory: NoSplash.splashFactory,
-                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 40, vertical: 10),
                       backgroundColor: Color(0xFF393939),
                       disabledBackgroundColor: Color(0xFF191919),
                       minimumSize: Size(double.infinity, 50),
@@ -533,7 +551,8 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                         }
                         return null;
                       }),
-                      foregroundColor: MaterialStateProperty.resolveWith((states) {
+                      foregroundColor:
+                          MaterialStateProperty.resolveWith((states) {
                         if (states.contains(MaterialState.pressed)) {
                           return Colors.white24; // 按下时文字颜色
                         }
@@ -546,7 +565,6 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                     ),
                   ),
                 ),
-
 
                 SizedBox(height: 20), // 调整间隔
               ],
@@ -565,7 +583,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
         Text(label, style: TextStyle(color: Color(0xFFAAAAAA))),
         SizedBox(height: 5), // 调整输入框上方间隔
         Container(
-          width: 100,
+          width: 98,
           height: 35,
           child: TextField(
             cursorColor: Colors.green, // 设置光标颜色为红色
@@ -595,7 +613,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
         child: Container(
           padding: EdgeInsets.symmetric(
             horizontal: 21,
-            vertical: 5,
+            vertical: 4,
           ),
           decoration: BoxDecoration(
             color: isSelected ? Color(0xFF767678) : Colors.transparent,
