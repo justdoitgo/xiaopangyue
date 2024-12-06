@@ -426,7 +426,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
               children: [
                 // Spacer(),
                 Container(
-                  padding: const EdgeInsets.only(left: 5,top: 120),
+                  padding: const EdgeInsets.only(left: 5,top: 100),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
