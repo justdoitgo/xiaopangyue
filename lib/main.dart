@@ -336,6 +336,8 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 判断键盘是否弹出
+    final bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
       backgroundColor: Color(0x010103FF),
 /*      appBar: AppBar(
@@ -358,16 +360,20 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
         ],
       ),*/
       body: Container(
-        height: MediaQuery.of(context).size.height, // 使用屏幕高度
+        //height: MediaQuery.of(context).size.height, // 使用屏幕高度
         padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Column(
           children: [
-            Flexible(
-              flex: 2,
-              child: Container(
-                //  color: Colors.red,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 0, vertical: 50),
+
+            // 使用 AnimatedSwitcher 来实现键盘弹出时的平滑过渡
+            AnimatedOpacity(
+              opacity: isKeyboardVisible ? 0.0 : 1.0, // 控制透明度
+              duration: Duration(milliseconds: 300),
+              child: isKeyboardVisible
+                  ? SizedBox.shrink() // 键盘弹出时隐藏
+                  : Container(
+                key: ValueKey<bool>(isKeyboardVisible), // 使用键盘是否弹出作为 key，确保切换时动画正常
+                padding: const EdgeInsets.only(top: 50, bottom: 50),
                 child: Column(
                   children: [
                     Stack(
@@ -393,7 +399,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                           child: Align(
                             alignment: Alignment.centerRight,
                             child: Padding(
-                              padding: EdgeInsets.only(right: 5.0), // 添加适当的右边距
+                              padding: EdgeInsets.only(right: 5.0),
                               child: CustomPaint(
                                 size: Size(20, 20),
                                 painter: HexagonWithCirclePainter(),
@@ -403,14 +409,13 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                         ),
                       ],
                     ),
-                    Spacer()
                   ],
                 ),
               ),
             ),
             Container(
-              //  color: Colors.red,
-              padding: const EdgeInsets.only(top: 0, left: 10, bottom: 50),
+              // color: Colors.red,
+              padding: const EdgeInsets.only(top: 75, left: 10, bottom: 0),
               child: Text(
                 "$randomNumber",
                 style: const TextStyle(
@@ -420,7 +425,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                 textAlign: TextAlign.center,
               ),
             ),
-            Spacer(flex: 2,),
+            Spacer(),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
