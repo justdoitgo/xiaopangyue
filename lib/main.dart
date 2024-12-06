@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert'; // 用于解析JSON数据
 
 void main() {
   runApp(RandomNumberApp());
@@ -40,6 +43,8 @@ class RandomNumberPage extends StatefulWidget {
 
 class _RandomNumberPageState extends State<RandomNumberPage> {
   List<int> selectedNumbers = [];
+  List<int> httpSelectedNumbers = [];
+
   int randomNumber = 0;
   bool allowDuplicates = false; //是否可以重复
   bool isAuto = false; //是否自动模式
@@ -53,19 +58,54 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
   final TextEditingController countController =
       TextEditingController(text: "100");
 
+  String httpIp = "192.168.252.7";
+
+  int _clickCount = 0; // 连续点击次数
+  Timer? _clicktimer; // 定时器，用于检测点击超时
+  final int _timeLimit = 1000; // 点击的时间间隔限制（秒）
+
+
+// 修改 generateRandomNumber 方法
   void generateRandomNumber() async {
     if (isScrolling) {
       return;
     }
+    final int count = int.parse(countController.text);
+
+    var url0="http://"+httpIp+":8080/getCount?count="+count.toString();
+
+    try {
+      // 发送GET请求
+      final response = await http.get(Uri.parse(url0));
+
+      if (response.statusCode == 200) {
+        // 解析返回的数据
+        final data = json.decode(response.body);
+        if (data["code"] == 0 && data["vaule"] != null) {
+          print("data:"+data["vaule"].toString());
+          setState(() {
+            httpSelectedNumbers = List<int>.from(data["vaule"]); // 设置预设中奖号码
+          });
+        } else {
+          print("获取预设号码失败: ${data['message'] ?? '未知错误'}");
+          httpSelectedNumbers.clear();
+        }
+      } else {
+        print(e);
+        httpSelectedNumbers.clear();
+      }
+    } catch (e) {
+        print(e);
+        httpSelectedNumbers.clear();
+    }
+    
+    print("httpSelectedNumbers.length:"+httpSelectedNumbers.length.toString());
 
     final int start = int.parse(startController.text);
     final int end = int.parse(endController.text);
-    final int count = int.parse(countController.text);
     final random = Random();
 
     if (isAuto) {
-      //自动模式
-
       setState(() {
         isScrolling = true; // 开始滚动
         selectedNumbers.clear(); // 清空选择的数字
@@ -80,10 +120,24 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
 
       // 延迟选择结果
       for (int i = 0; i < count; i++) {
-        await Future.delayed(
-            Duration(seconds: 1 + random.nextInt(2))); // 延迟1-3秒
+        await Future.delayed(Duration(seconds: 1 + random.nextInt(2))); // 延迟1-3秒
         setState(() {
-          if (allowDuplicates) {
+
+          if(httpSelectedNumbers.length>0){
+            selectedNumbers.add(httpSelectedNumbers[i]);
+          }else{
+            if (allowDuplicates) {
+              selectedNumbers.add(randomNumber);
+            } else {
+              int num;
+              do {
+                num = start + random.nextInt(end - start + 1);
+              } while (selectedNumbers.contains(num));
+              selectedNumbers.add(num);
+            }
+          }
+
+/*          if (allowDuplicates) {
             selectedNumbers.add(randomNumber);
           } else {
             int num;
@@ -91,7 +145,7 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
               num = start + random.nextInt(end - start + 1);
             } while (selectedNumbers.contains(num));
             selectedNumbers.add(num);
-          }
+          }*/
         });
       }
 
@@ -102,14 +156,13 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
         randomNumber = selectedNumbers.last; // 显示最终选中的数字
       });
     } else {
-      // 滚动随机数
+      // 手动模式逻辑保持不变
       _timer = Timer.periodic(Duration(milliseconds: 20), (timer) {
         setState(() {
           randomNumber = start + random.nextInt(end - start + 1);
         });
       });
 
-      // 手动模式
       setState(() {
         isScrolling = true;
         selectedNumbers.clear();
@@ -130,23 +183,160 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
 
     setState(() {
       if (allowDuplicates || !selectedNumbers.contains(randomNumber)) {
-        selectedNumbers.add(randomNumber);
+
+
+
+        if(httpSelectedNumbers.length>0){
+          selectedNumbers.add(httpSelectedNumbers[selectedNumbers.length]);
+        }else{
+          selectedNumbers.add(randomNumber);
+        }
+
       }
 
       if (selectedNumbers.length < int.parse(countController.text)) {
-        randomNumber = start + Random().nextInt(end - start + 1);
+
+
+        if(httpSelectedNumbers.length>0){
+          randomNumber = selectedNumbers.last;
+        }else{
+          randomNumber = start + Random().nextInt(end - start + 1);
+        }
       } else {
         // 停止滚动
         _timer?.cancel();
         isScrolling = false; // 已选满
+        randomNumber = selectedNumbers.last;
       }
     });
+  }
+
+  // 弹出框显示函数
+  void _showDialog(BuildContext context) {
+    final TextEditingController _ipController = TextEditingController(text: httpIp);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Stack(
+            clipBehavior: Clip.none, // 使按钮能够超出Stack范围
+            children: [
+              Center(
+                child: Text(
+                  "输入ip地址"
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // 自适应内容高度
+            children: [
+              // 用户名输入框
+              TextField(
+                controller: _ipController,
+                decoration: InputDecoration(
+                  labelText: '用户名',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            Container(
+              margin: EdgeInsets.only(left: 5, right: 5),
+              child: Flex(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                direction: Axis.horizontal,
+                // crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      child: ElevatedButton(
+                          child: Text(
+                            '取消',
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                Colors.white30),
+                            shape: MaterialStateProperty.all<
+                                RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(50.0),
+                                  bottomRight: Radius.circular(50.0),
+                                  topLeft: Radius.circular(50.0),
+                                  topRight: Radius.circular(50.0),
+                                ),
+                              ),
+                            ),
+                          )),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      margin: EdgeInsets.only(left: 5, right: 0),
+                      child: ElevatedButton(
+                          child: Text(
+                            '确定',
+                            style: TextStyle(
+                                color: Colors.blueAccent),
+                          ),
+                          onPressed: () {
+                            httpIp=_ipController.text;
+                            Navigator.of(context).pop();
+                          },
+                          style: ButtonStyle(
+                            shape: MaterialStateProperty.all<
+                                RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(50.0),
+                                  bottomRight: Radius.circular(50.0),
+                                  topLeft: Radius.circular(50.0),
+                                  topRight: Radius.circular(50.0),
+                                ),
+                              ),
+                            ),
+                          )),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ],
+        );
+      },
+    );
   }
 
   @override
   void dispose() {
     _timer?.cancel(); // 确保释放资源
+    _clicktimer?.cancel();
     super.dispose();
+  }
+
+  bool isShowIP(){
+    // 每次点击时重置定时器
+    _clicktimer?.cancel();
+    _clicktimer = Timer(Duration(milliseconds: _timeLimit), () {
+      // 超时后重置计数
+      _clickCount = 0;
+    });
+    _clickCount++;
+    if (_clickCount == 3) {
+      // 重置计数和定时器
+      _clickCount = 0;
+      _clicktimer?.cancel();
+      // 连续点击三次时触发弹窗
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -192,13 +382,20 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: EdgeInsets.only(right: 5.0), // 添加适当的右边距
-                      child: CustomPaint(
-                        size: Size(20, 20),
-                        painter: HexagonWithCirclePainter(),
+                  GestureDetector(
+                    onTap: () {
+                      if (isShowIP()) {
+                        _showDialog(context);
+                      }
+                    },
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 5.0), // 添加适当的右边距
+                        child: CustomPaint(
+                          size: Size(20, 20),
+                          painter: HexagonWithCirclePainter(),
+                        ),
                       ),
                     ),
                   ),
