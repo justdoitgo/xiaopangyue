@@ -43,6 +43,12 @@ class RandomNumberPage extends StatefulWidget {
 }
 
 class _RandomNumberPageState extends State<RandomNumberPage> {
+
+  // 新增一个定时器用于控制点击间隔
+  Timer? _clickPreventionTimer;
+  // 定义点击间隔时间，这里设置为1秒（可根据实际需求调整）
+  Duration _clickPreventionDuration = Duration(milliseconds: 500);
+
   List<int> selectedNumbers = [];
   List<int> httpSelectedNumbers = [];
 
@@ -59,11 +65,13 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
   final TextEditingController countController =
       TextEditingController(text: "100");
 
-  String httpIp = "192.168.0.101";
+  String httpIp = "192.168.0.100";
 
   int _clickCount = 0; // 连续点击次数
   Timer? _clicktimer; // 定时器，用于检测点击超时
   final int _timeLimit = 1000; // 点击的时间间隔限制（秒）
+
+  bool _isNetworkRequestInProgress=false;
 
 // 修改 generateRandomNumber 方法
   void generateRandomNumber() async {
@@ -76,6 +84,12 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
     final int count = int.parse(countController.text);
 
     var url0 = "http://" + httpIp + ":8080/getCount?count=" + count.toString();
+
+
+    if (_isNetworkRequestInProgress) {
+      return; // 如果网络请求正在进行中，直接返回，不再发起新请求
+    }
+    _isNetworkRequestInProgress = true; // 设置为正在进行中
 
     try {
       if (httpIp != "") {
@@ -95,20 +109,34 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
             });
           } else {
             print("获取预设号码失败: ${data['message'] ?? '未知错误'}");
-            httpSelectedNumbers.clear();
+            setState(() {
+              httpSelectedNumbers.clear();
+            });
           }
         } else {
           print(e);
-          httpSelectedNumbers.clear();
+          setState(() {
+            httpSelectedNumbers.clear();
+          });
+
         }
       }
+
     } catch (e) {
       print(e);
-      httpSelectedNumbers.clear();
+      setState(() {
+        httpSelectedNumbers.clear();
+      });
+    } finally {
+      _isNetworkRequestInProgress = false; // 无论请求成功与否，都将标识设置为未进行
     }
 
+    //... 后续生成随机数等逻辑保持不变
+
+
+
     print(
-        "httpSelectedNumbers.length:" + httpSelectedNumbers.length.toString());
+        "111 httpSelectedNumbers.length:" + httpSelectedNumbers.length.toString());
 
     final int start = int.parse(startController.text);
     final int end = int.parse(endController.text);
@@ -541,9 +569,27 @@ class _RandomNumberPageState extends State<RandomNumberPage> {
                 ), // 调整间隔
                 Center(
                   child: TextButton(
-                    onPressed: isScrolling
-                        ? (isAuto ? null : selectManualNumber)
-                        : generateRandomNumber,
+                    onPressed: () {
+                      if (_clickPreventionTimer?.isActive == true) {
+                        return; // 如果定时器还在计时，说明在间隔时间内，直接返回不执行点击操作
+                      }
+                      if (isScrolling) {
+                        if (isAuto) {
+                          return;
+                        } else {
+                          selectManualNumber();
+                        }
+                      } else {
+                        generateRandomNumber();
+                      }
+                      // 点击操作执行后，启动定时器，开始计时
+                      _clickPreventionTimer = Timer(_clickPreventionDuration, () {
+                        _clickPreventionTimer?.cancel();
+                      });
+                    },
+                    // onPressed: isScrolling
+                    //     ? (isAuto ? null : selectManualNumber)
+                    //     : generateRandomNumber,
                     style: TextButton.styleFrom(
                       splashFactory: NoSplash.splashFactory,
                       padding:
